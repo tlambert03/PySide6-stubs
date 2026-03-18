@@ -1,0 +1,17 @@
+[build-system]
+requires = ["hatchling", "httpx", "packaging"]
+build-backend = "hatchling.build"
+
+[project]
+name = "PySide6-stubs"
+dynamic = ["version"]
+description = "Type stubs for PySide6, extracted from the official PySide6 package"
+requires-python = ">=3.9"
+
+[tool.hatch.version]
+source = "code"
+path = "_version.py"
+expression = "get_pyside6_version()"
+
+[tool.hatch.build.hooks.custom]
+path = "hatch_build.py"

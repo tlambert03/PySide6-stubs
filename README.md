@@ -3,6 +3,10 @@
 PySide6 type stubs as a standalone, lightweight package — without installing
 PySide6 itself.
 
+> **Note:** This package is not intended to be published to PyPI. It is
+> intended for development and type checking only.  Install it
+> directly from GitHub (see [Usage](#usage) below).
+
 ## Why?
 
 Libraries that support both PyQt6 and PySide6 need to pick one package for
@@ -29,18 +33,25 @@ just the `.pyi` stub files and installs them as a PEP 561 stub package.
 
 ## Usage
 
+Add it as a dev dependency pointing at a specific version tag:
+
+```bash
+uv add --dev "PySide6-stubs @ git+https://github.com/tlambert03/PySide6-stubs@v6.8.0"
+```
+
+This adds the following to your `pyproject.toml`:
+
 ```toml
-# pyproject.toml
 [dependency-groups]
-typing = [
+dev = [
     "PySide6-stubs @ git+https://github.com/tlambert03/PySide6-stubs@v6.8.0",
 ]
 ```
 
-Then run your type checker with the group installed:
+Then run your type checker as usual:
 
 ```bash
-uv run --group typing pyright
+uv run pyright
 ```
 
 ### Picking a version

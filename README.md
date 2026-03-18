@@ -61,7 +61,7 @@ uv run pyright
 
 ### Picking a version
 
-Pick the **lowest PySide6 release you intend to support**. Available tags
+Pick the **lowest Qt API you intend to support**. Available tags
 correspond to every stable PySide6 release on PyPI (e.g. `v6.7.0`, `v6.8.0`,
 `v6.10.2`). This ensures your type checker won't see APIs that don't exist in
 your minimum supported version.

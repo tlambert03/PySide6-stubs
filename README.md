@@ -35,6 +35,74 @@ PySide6 ships excellent stubs, but installing it pulls in ~200 MB of compiled Qt
 binaries that are completely unnecessary for type checking. This package extracts
 just the `.pyi` stub files and installs them as a PEP 561 stub package.
 
+<details>
+
+<summary>Stubs comparison</summary>
+
+1. nullability
+
+    PyQt6 marks nearly everything as `Optional`. This includes parameters that should never be None:
+
+    ```python
+    # PyQt6 — wrong: you can't setText(None) in C++ Qt
+    def setText(self, text: typing.Optional[str]) -> None: ...
+    def setWindowTitle(self, a0: typing.Optional[str]) -> None: ...
+    def addWidget(self, w: typing.Optional[QWidget]) -> None: ...
+    
+    # PySide6 — correct: str is required
+    def setText(self, text: str, /) -> None: ...
+    def setWindowTitle(self, title: str, /) -> None: ...
+    def addWidget(self, arg__1: PySide6.QtWidgets.QWidget, /) -> None: ...
+    ```
+
+    PyQt6's SIP generator appears to blanket-mark pointer/reference parameters as Optional, which is technically "safe" but destroys the value of type checking —
+    you'll never get a warning for passing None where it would segfault.
+
+1. Implicit conversions
+
+    PySide6 encodes Qt's implicit C++ conversions as unions:
+
+    ```python
+    # PySide6 — knows QPixmap is implicitly convertible to QIcon
+    def setIcon(self, icon: QIcon | QPixmap, /) -> None: ...
+    def setPixmap(self, pixmap: QPixmap | QImage, /) -> None: ...
+    def setBrush(self, brush: QBrush | Qt.BrushStyle | Qt.GlobalColor | QColor | QGradient | QImage | QPixmap, /) -> None: ...
+    
+    # PyQt6 — only accepts the exact type
+    def setIcon(self, icon: QIcon) -> None: ...
+    def setPixmap(self, pixmap: QPixmap) -> None: ...
+    ```
+
+    `label.setPixmap(QImage(...))` is valid Qt code and works at runtime with both backends,
+    but PyQt6's stubs would flag it as an error.
+
+1. Positional-only parameters (/)
+
+    PySide6 uses the / marker on most signatures. PyQt6 uses it on zero.
+    This correctly prevents `widget.setText(text="hello")` which would fail at runtime (C++
+    bindings don't support keyword arguments for most positional params).
+
+1. Keyword-only property arguments in `__init__`
+
+    Both backends support setting Qt properties as keyword arguments in
+    constructors at runtime (e.g. `QPushButton(text="Click", flat=True)`).
+    PySide6's stubs model this; PyQt6's don't — so pyright/mypy will reject
+    valid code when using PyQt6 stubs:
+
+1. Enum values have actual int values
+
+    ```python
+    # PySide6 — actual values
+    DrawWindowBackground = 0x1
+    DrawChildren = 0x2
+    
+    # PyQt6 — opaque
+    DrawWindowBackground = ... # type: QWidget.RenderFlag
+    DrawChildren = ... # type: QWidget.RenderFlag
+    ```
+
+</details>
+
 ## Usage
 
 Add it as a dev dependency pointing at a specific version tag (usually, the

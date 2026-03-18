@@ -5,7 +5,6 @@ from __future__ import annotations
 import io
 import os
 import re
-import subprocess
 import zipfile
 from pathlib import Path
 
@@ -14,22 +13,16 @@ from hatchling.builders.hooks.plugin.interface import BuildHookInterface
 
 STUBS_DIR = Path(__file__).parent / "PySide6-stubs"
 PYPI_URL = "https://pypi.org/pypi/PySide6"
+VERSION_FILE = Path(__file__).parent / ".pyside6-version"
 
 
 def _resolve_version() -> str:
-    """Resolve target version: PYSIDE6_VERSION env var > git tag > PyPI latest."""
+    """Resolve target version: env var > .pyside6-version file > PyPI latest."""
     if version := os.environ.get("PYSIDE6_VERSION"):
         return version.lstrip("v")
 
-    try:
-        tag = subprocess.check_output(
-            ["git", "describe", "--tags", "--exact-match"],
-            stderr=subprocess.DEVNULL,
-            text=True,
-        ).strip()
-        return tag.lstrip("v")
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        pass
+    if VERSION_FILE.exists():
+        return VERSION_FILE.read_text().strip()
 
     resp = httpx.get(f"{PYPI_URL}/json")
     resp.raise_for_status()

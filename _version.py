@@ -3,27 +3,21 @@
 from __future__ import annotations
 
 import os
-import subprocess
+from pathlib import Path
 
 import httpx
 
 PYPI_URL = "https://pypi.org/pypi/PySide6/json"
+VERSION_FILE = Path(__file__).parent / ".pyside6-version"
 
 
 def get_pyside6_version() -> str:
-    """Resolve target version: PYSIDE6_VERSION env var > git tag > PyPI latest."""
+    """Resolve target version: env var > .pyside6-version file > PyPI latest."""
     if version := os.environ.get("PYSIDE6_VERSION"):
         return version.lstrip("v")
 
-    try:
-        tag = subprocess.check_output(
-            ["git", "describe", "--tags", "--exact-match"],
-            stderr=subprocess.DEVNULL,
-            text=True,
-        ).strip()
-        return tag.lstrip("v")
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        pass
+    if VERSION_FILE.exists():
+        return VERSION_FILE.read_text().strip()
 
     resp = httpx.get(PYPI_URL)
     resp.raise_for_status()

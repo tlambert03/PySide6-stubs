@@ -98,3 +98,4 @@ dmypy.json
 .pytype/
 .vscode/
 PySide6-stubs/
+uv.lock
